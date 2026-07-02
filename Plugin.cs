@@ -25,7 +25,6 @@ static class ModToggles
     public static bool Speed5x;
     public static bool AutoChest;
     public static bool AutoActBoss;
-    public static bool AntiCheatBypass;
     public static bool ShowMenu = true;
     public static bool XpBoost;
     public static bool UnlockAll;
@@ -37,18 +36,16 @@ static class ModToggles
     public static float XpMultiplier = 9999f;
 }
 
-// ─── Anti-Cheat Bypass ────────────────────────────────
+// ─── Anti-Cheat Bypass (always active) ─────────────────
+// Block all ACTk detectors unconditionally + destroy instances
 [HarmonyPatch(typeof(InjectionDetector), "ykl")]
-sealed class NI { static bool Prefix() => !ModToggles.AntiCheatBypass; }
-
+sealed class NI { static bool Prefix() => false; }
 [HarmonyPatch(typeof(SpeedHackDetector), "ykl")]
-sealed class NS { static bool Prefix() => !ModToggles.AntiCheatBypass; }
-
+sealed class NS { static bool Prefix() => false; }
 [HarmonyPatch(typeof(WallHackDetector), "ykl")]
-sealed class NW { static bool Prefix() => !ModToggles.AntiCheatBypass; }
-
+sealed class NW { static bool Prefix() => false; }
 [HarmonyPatch(typeof(TimeCheatingDetector), "ykl")]
-sealed class NT { static bool Prefix() => !ModToggles.AntiCheatBypass; }
+sealed class NT { static bool Prefix() => false; }
 
 // ─── Hero Mods ────────────────────────────────────────
 [HarmonyPatch(typeof(Hero), "gpp")]
@@ -214,6 +211,14 @@ public sealed class J3L1XDKeeper : MonoBehaviour
 
     public J3L1XDKeeper(IntPtr p) : base(p) { }
     internal static void OnChestReceived(uz.StageCache _) { /* webhook removed */ }
+
+    void Start()
+    {
+        foreach (var det in FindObjectsOfType<InjectionDetector>()) Destroy(det);
+        foreach (var det in FindObjectsOfType<SpeedHackDetector>()) Destroy(det);
+        foreach (var det in FindObjectsOfType<WallHackDetector>()) Destroy(det);
+        foreach (var det in FindObjectsOfType<TimeCheatingDetector>()) Destroy(det);
+    }
 
     void Update()
     {
@@ -520,7 +525,6 @@ public sealed class J3L1XDKeeper : MonoBehaviour
         rightY = DrawToggleItem(contentY, rightY, rightX, colW, "Auto Act Boss", ref ModToggles.AutoActBoss, "Auto-enter portal");
 
         rightY = DrawSection(contentY, rightY, rightX, colW, "SYSTEM");
-        rightY = DrawToggleItem(contentY, rightY, rightX, colW, "Anti-Cheat Bypass", ref ModToggles.AntiCheatBypass, "Disable AC");
         rightY = DrawToggleItem(contentY, rightY, rightX, colW, "XP / Drop Boost", ref ModToggles.XpBoost, "EXP, gold, drops");
         rightY = DrawSliderItem(contentY, rightY, rightX, colW, "Gold Multiplier", ref ModToggles.GoldMultiplier, 1f, 9999f, "0x");
         rightY = DrawSliderItem(contentY, rightY, rightX, colW, "XP Multiplier", ref ModToggles.XpMultiplier, 1f, 9999f, "0x");
