@@ -13,6 +13,7 @@ using TaskbarHero;
 using TaskbarHero.Data;
 using TaskbarHero.StatusSystem;
 using TaskbarHero.UI;
+using TaskbarHero.Manager;
 
 namespace J3L1XD;
 
@@ -27,6 +28,7 @@ static class ModToggles
     public static bool AntiCheatBypass;
     public static bool ShowMenu = true;
     public static bool XpBoost;
+    public static bool UnlockAll;
     public static float SpeedMultiplier = 5f;
     public static float DamageMultiplier = 1000f;
 }
@@ -64,6 +66,16 @@ sealed class MK
             a.OriginDamage = Math.Max(a.OriginDamage * ModToggles.DamageMultiplier, ModToggles.DamageMultiplier);
     }
 }
+
+// ─── Unlock All (DLC + Pets) ──────────────────────────
+[HarmonyPatch(typeof(DLCManager), "hbo")]
+sealed class UA { static bool Prefix(ref bool __result) { if (!ModToggles.UnlockAll) return true; __result = true; return false; } }
+
+[HarmonyPatch(typeof(PetManager), "kqt")]
+sealed class UP { static bool Prefix(ref bool __result) { if (!ModToggles.UnlockAll) return true; __result = true; return false; } }
+
+[HarmonyPatch(typeof(PetManager), "kqx")]
+sealed class UQ { static bool Prefix(ref bool __result) { if (!ModToggles.UnlockAll) return true; __result = true; return false; } }
 
 // ─── XP / Drop Rates ──────────────────────────────────
 [HarmonyPatch(typeof(AccountStatus), "klm")]
@@ -453,6 +465,7 @@ public sealed class J3L1XDKeeper : MonoBehaviour
         y = DrawSection(contentY, y, "SYSTEM");
         y = DrawToggleItem(contentY, y, "Anti-Cheat Bypass", ref ModToggles.AntiCheatBypass, "Disable AC");
         y = DrawToggleItem(contentY, y, "XP / Drop Boost", ref ModToggles.XpBoost, "EXP, gold, drops");
+        y = DrawToggleItem(contentY, y, "Unlock All", ref ModToggles.UnlockAll, "Unlock DLC heroes + pets");
 
         if (statusTimer > 0 && !string.IsNullOrEmpty(statusText))
         {
