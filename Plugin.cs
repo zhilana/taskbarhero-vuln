@@ -13,6 +13,7 @@ using TaskbarHero;
 using TaskbarHero.Data;
 using TaskbarHero.StatusSystem;
 using TaskbarHero.UI;
+using MoreMountains.Tools;
 
 namespace J3L1XD;
 
@@ -28,6 +29,8 @@ static class ModToggles
     public static bool ShowMenu = true;
     public static bool XpBoost;
     public static bool UnlockAll;
+    public static bool UnlockAllAchievements;
+    public static bool AchievementsUnlocked;  // prevent re-trigger
     public static float SpeedMultiplier = 5f;
     public static float DamageMultiplier = 1000f;
     public static float GoldMultiplier = 9999f;
@@ -128,7 +131,8 @@ public sealed class J3L1XDKeeper : MonoBehaviour
     private readonly Dictionary<IntPtr, float> actBossLastHitAt = new();
     private float nextChestClaimAt;
     private float nextActBossAt;
-    private const float ActBossKillSeconds = 60f;
+    private const float ActBossKillSecondsTorment = 60f;
+    private const float ActBossKillSecondsOther = 0.1f;
 
     // GUI state
     private Rect menuRect = new(Screen.width - 650, 50, 620, 520);
@@ -213,7 +217,7 @@ public sealed class J3L1XDKeeper : MonoBehaviour
 
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.RightShift)) SetMenuVisible(!ModToggles.ShowMenu);
+        if (Input.GetKeyDown(KeyCode.LeftShift) || Input.GetKeyDown(KeyCode.RightShift)) SetMenuVisible(!ModToggles.ShowMenu);
 
         if (ModToggles.ShowMenu) ApplyMenuCursor();
         else if (cursorCaptured || windowInputCaptured) RestoreMenuInput();
@@ -238,6 +242,7 @@ public sealed class J3L1XDKeeper : MonoBehaviour
 
         if (ModToggles.AutoChest) TryAutoChest();
         if (ModToggles.AutoActBoss) TryAutoActBoss();
+        if (ModToggles.UnlockAllAchievements && !ModToggles.AchievementsUnlocked) TryUnlockAllAchievements();
 
         if (statusTimer > 0) statusTimer -= Time.unscaledDeltaTime;
     }
@@ -249,9 +254,30 @@ public sealed class J3L1XDKeeper : MonoBehaviour
         float now = Time.unscaledTime;
         if (!actBossHp.ContainsKey(id))
             actBossHp[id] = Math.Max(monster.UnitHealthController.bscp, 1f);
+
+        ESTAGEDIFFICULTY diff = GetCurrentDifficulty();
+        float killSeconds = (diff == ESTAGEDIFFICULTY.TORMENT) ? ActBossKillSecondsTorment : ActBossKillSecondsOther;
+
+        if (killSeconds <= 0.5f)
+        {
+            monster.gqm(new DamageInfo(actBossHp[id] * 99f, false, hero, EDamageType.None, false, false));
+            return;
+        }
+
         if (actBossLastHitAt.TryGetValue(id, out float last) && now - last < 1f) return;
         actBossLastHitAt[id] = now;
-        monster.gqm(new DamageInfo(actBossHp[id] / ActBossKillSeconds, false, hero, EDamageType.None, false, false));
+        monster.gqm(new DamageInfo(actBossHp[id] / killSeconds, false, hero, EDamageType.None, false, false));
+    }
+
+    private ESTAGEDIFFICULTY GetCurrentDifficulty()
+    {
+        try
+        {
+            var stageCache = uz.us.bevt;
+            if (stageCache != null) return stageCache.bsla;
+        }
+        catch { }
+        return ESTAGEDIFFICULTY.NORMAL;
     }
 
     private void TryAutoChest()
@@ -292,6 +318,31 @@ public sealed class J3L1XDKeeper : MonoBehaviour
         return int.TryParse(nums[0].Value, out int owned) &&
                int.TryParse(nums[1].Value, out int needed) &&
                needed > 0 && owned >= needed;
+    }
+
+    private void TryUnlockAllAchievements()
+    {
+        try
+        {
+            ModToggles.AchievementsUnlocked = true;
+            MMAchievementList list = MMAchievementList.btlw;
+            if (list == null || list.Achievements == null) return;
+            foreach (MMAchievement ach in list.Achievements)
+            {
+                if (ach == null) continue;
+                if (!ach.UnlockedStatus)
+                {
+                    car.qoq(ach.AchievementID);
+                    if (ach.AchievementType == AchievementTypes.Progress && ach.ProgressTarget > 0)
+                        car.qos(ach.AchievementID, ach.ProgressTarget);
+                }
+            }
+            ShowStatus("All achievements unlocked!");
+        }
+        catch (Exception e)
+        {
+            BepInEx.Logging.Logger.CreateLogSource("J3L1XD").LogError($"Achievement unlock failed: {e}");
+        }
     }
 
     private void ShowStatus(string msg) { statusText = msg; statusTimer = 2f; }
@@ -474,6 +525,7 @@ public sealed class J3L1XDKeeper : MonoBehaviour
         rightY = DrawSliderItem(contentY, rightY, rightX, colW, "Gold Multiplier", ref ModToggles.GoldMultiplier, 1f, 9999f, "0x");
         rightY = DrawSliderItem(contentY, rightY, rightX, colW, "XP Multiplier", ref ModToggles.XpMultiplier, 1f, 9999f, "0x");
         rightY = DrawToggleItem(contentY, rightY, rightX, colW, "DLC Unlock", ref ModToggles.UnlockAll, "Bypass DLC ownership check");
+        rightY = DrawToggleItem(contentY, rightY, rightX, colW, "Unlock Achievements", ref ModToggles.UnlockAllAchievements, "Unlock all achievements");
 
         float y = Mathf.Max(leftY, rightY);
         float contentBottom = contentY + y + 4;

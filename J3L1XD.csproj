@@ -58,6 +58,10 @@
       <HintPath>$(BEPINEX_PATH)/BepInEx/interop/ACTk.Runtime.dll</HintPath>
       <Private>false</Private>
     </Reference>
+    <Reference Include="MoreMountains.Tools">
+      <HintPath>$(BEPINEX_PATH)/BepInEx/interop/MoreMountains.Tools.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
     <Reference Include="0Harmony">
       <HintPath>$(BEPINEX_PATH)/BepInEx/core/0Harmony.dll</HintPath>
       <Private>false</Private>
