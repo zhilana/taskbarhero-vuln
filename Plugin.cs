@@ -14,6 +14,7 @@ using TaskbarHero.Data;
 using TaskbarHero.StatusSystem;
 using TaskbarHero.UI;
 using TaskbarHero.Manager;
+using TaskbarHero.EasySaveData;
 
 namespace J3L1XD;
 
@@ -31,6 +32,8 @@ static class ModToggles
     public static bool UnlockAll;
     public static float SpeedMultiplier = 5f;
     public static float DamageMultiplier = 1000f;
+    public static float GoldMultiplier = 9999f;
+    public static float XpMultiplier = 9999f;
 }
 
 // ─── Anti-Cheat Bypass ────────────────────────────────
@@ -77,6 +80,10 @@ sealed class UP { static bool Prefix(ref bool __result) { if (!ModToggles.Unlock
 [HarmonyPatch(typeof(PetManager), "kqx")]
 sealed class UQ { static bool Prefix(ref bool __result) { if (!ModToggles.UnlockAll) return true; __result = true; return false; } }
 
+// Prevent crash when clicking unlocked pet with no save data
+[HarmonyPatch(typeof(PetManager), "krd")]
+sealed class UR { static void Postfix(int a, ref PetSaveData __result) { if (!ModToggles.UnlockAll || __result != null) return; __result = new PetSaveData(a, true, true); } }
+
 // ─── XP / Drop Rates ──────────────────────────────────
 [HarmonyPatch(typeof(AccountStatus), "klm")]
 sealed class XP
@@ -88,8 +95,9 @@ sealed class XP
         else if (a == EAccountStatus.DropChanceStageBossChest) __result = 10;
         else if (a == EAccountStatus.DropChanceNormalChestPercent) __result = 100;
         else if (a == EAccountStatus.DropChanceStageBossChestPercent) __result = 100;
-        else if (a == EAccountStatus.IncreaseExpAmount || a == EAccountStatus.IncreaseGoldAmount ||
-                 a == EAccountStatus.OpenOneTypeChestAllAtOnce || a == EAccountStatus.OpenAllTypeChestAllAtOnce ||
+        else if (a == EAccountStatus.IncreaseGoldAmount) __result = (int)ModToggles.GoldMultiplier;
+        else if (a == EAccountStatus.IncreaseExpAmount) __result = (int)ModToggles.XpMultiplier;
+        else if (a == EAccountStatus.OpenOneTypeChestAllAtOnce || a == EAccountStatus.OpenAllTypeChestAllAtOnce ||
                  a == EAccountStatus.UnlockAutoOpenNormalChest || a == EAccountStatus.UnlockAutoOpenStageBossChest ||
                  a == EAccountStatus.UnlockAutoOpenActBossChest) __result = 9999;
     }
@@ -465,6 +473,8 @@ public sealed class J3L1XDKeeper : MonoBehaviour
         y = DrawSection(contentY, y, "SYSTEM");
         y = DrawToggleItem(contentY, y, "Anti-Cheat Bypass", ref ModToggles.AntiCheatBypass, "Disable AC");
         y = DrawToggleItem(contentY, y, "XP / Drop Boost", ref ModToggles.XpBoost, "EXP, gold, drops");
+        y = DrawSliderItem(contentY, y, "Gold Multiplier", ref ModToggles.GoldMultiplier, 1f, 9999f, "0x");
+        y = DrawSliderItem(contentY, y, "XP Multiplier", ref ModToggles.XpMultiplier, 1f, 9999f, "0x");
         y = DrawToggleItem(contentY, y, "Unlock All", ref ModToggles.UnlockAll, "Unlock DLC heroes + pets");
 
         if (statusTimer > 0 && !string.IsNullOrEmpty(statusText))
