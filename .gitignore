@@ -1,0 +1,24 @@
+# Decompiler output
+dump.cs
+
+# Setup/install scripts
+setup.sh
+install-windows.bat
+
+# Release artifacts
+*.zip
+README-DROPIN.txt
+
+# Build output
+bin/
+obj/
+
+# IDE/editor
+.omo/
+.vs/
+.vscode/
+.DS_Store
+
+# ImGui generated
+imgui.ini
+imgui*.ini
