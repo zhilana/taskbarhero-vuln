@@ -143,7 +143,7 @@ public sealed class J3L1XDKeeper : MonoBehaviour
     private const float ActBossKillSeconds = 60f;
 
     // GUI state
-    private Rect menuRect = new(Screen.width - 380, 50, 350, 500);
+    private Rect menuRect = new(Screen.width - 650, 50, 620, 520);
     private string statusText = "";
     private float statusTimer;
     private bool stylesInit;
@@ -158,6 +158,9 @@ public sealed class J3L1XDKeeper : MonoBehaviour
     private const float ItemH = 38;
     private const float SectionH = 24;
     private const float SliderH = 42;
+    private const float MenuW = 620f;
+    private const float MenuH = 520f;
+    private const float ColumnGap = 10f;
     private const int GwlExStyle = -20;
     private const long WsExTransparent = 0x20L;
     private const long WsExNoActivate = 0x08000000L;
@@ -429,8 +432,10 @@ public sealed class J3L1XDKeeper : MonoBehaviour
         GUI.depth = -10000;
         Color prev = GUI.color;
 
-        menuRect.x = Mathf.Clamp(menuRect.x, 0, Screen.width - menuRect.width);
-        menuRect.y = Mathf.Clamp(menuRect.y, 0, Screen.height - menuRect.height);
+        menuRect.width = Mathf.Min(MenuW, Mathf.Max(350f, Screen.width - 20f));
+        menuRect.height = Mathf.Min(MenuH, Mathf.Max(420f, Screen.height - 20f));
+        menuRect.x = Mathf.Clamp(menuRect.x, 0, Mathf.Max(0, Screen.width - menuRect.width));
+        menuRect.y = Mathf.Clamp(menuRect.y, 0, Mathf.Max(0, Screen.height - menuRect.height));
 
         DrawFrame(menuRect, ColFrameOuter, ColFrameMid, ColBg);
 
@@ -439,7 +444,7 @@ public sealed class J3L1XDKeeper : MonoBehaviour
 
         GUIStyle titleStyle = new() { fontSize = 17, fontStyle = FontStyle.Bold,
             normal = { textColor = ColTitle }, alignment = TextAnchor.MiddleCenter };
-        GUI.Label(new Rect(titleRect.x, titleRect.y + 1, titleRect.width, titleRect.height), "J3L1XD STASH", titleStyle);
+        GUI.Label(new Rect(titleRect.x, titleRect.y + 1, titleRect.width, titleRect.height), "J3L1XD MENU", titleStyle);
 
         GUIStyle closeStyle = new() { fontSize = 20, fontStyle = FontStyle.Bold,
             normal = { textColor = ColTitle }, hover = { textColor = Color.white }, alignment = TextAnchor.MiddleCenter };
@@ -456,30 +461,38 @@ public sealed class J3L1XDKeeper : MonoBehaviour
         GUI.DrawTexture(accentRect, MakeTex(1, 1, ColAccent));
 
         float contentY = accentRect.y + 8;
-        float y = 0;
-        y = DrawSection(contentY, y, "COMBAT");
-        y = DrawToggleItem(contentY, y, "God Mode", ref ModToggles.GodMode, "Invulnerable");
-        y = DrawToggleItem(contentY, y, "Damage Boost", ref ModToggles.OneHitKill, "Multiply monster damage");
-        y = DrawSliderItem(contentY, y, "Damage Multiplier", ref ModToggles.DamageMultiplier, 1f, 1000f, "0x");
+        float colW = (menuRect.width - 16 - ColumnGap) / 2f;
+        float leftX = menuRect.x + 8;
+        float rightX = leftX + colW + ColumnGap;
+        float leftY = 0;
+        float rightY = 0;
 
-        y = DrawSection(contentY, y, "WORLD");
-        y = DrawToggleItem(contentY, y, "Speed Boost", ref ModToggles.Speed5x, "Custom game speed");
-        y = DrawSliderItem(contentY, y, "Speed Multiplier", ref ModToggles.SpeedMultiplier, 1f, 20f, "0.0x");
+        leftY = DrawSection(contentY, leftY, leftX, colW, "COMBAT");
+        leftY = DrawToggleItem(contentY, leftY, leftX, colW, "God Mode", ref ModToggles.GodMode, "Invulnerable");
+        leftY = DrawToggleItem(contentY, leftY, leftX, colW, "Damage Boost", ref ModToggles.OneHitKill, "Multiply monster damage");
+        leftY = DrawSliderItem(contentY, leftY, leftX, colW, "Damage Multiplier", ref ModToggles.DamageMultiplier, 1f, 1000f, "0x");
 
-        y = DrawSection(contentY, y, "AUTOMATION");
-        y = DrawToggleItem(contentY, y, "Auto Chest", ref ModToggles.AutoChest, "Auto-claim boss chests");
-        y = DrawToggleItem(contentY, y, "Auto Act Boss", ref ModToggles.AutoActBoss, "Auto-enter portal");
+        leftY = DrawSection(contentY, leftY, leftX, colW, "WORLD");
+        leftY = DrawToggleItem(contentY, leftY, leftX, colW, "Speed Boost", ref ModToggles.Speed5x, "Custom game speed");
+        leftY = DrawSliderItem(contentY, leftY, leftX, colW, "Speed Multiplier", ref ModToggles.SpeedMultiplier, 1f, 20f, "0.0x");
 
-        y = DrawSection(contentY, y, "SYSTEM");
-        y = DrawToggleItem(contentY, y, "Anti-Cheat Bypass", ref ModToggles.AntiCheatBypass, "Disable AC");
-        y = DrawToggleItem(contentY, y, "XP / Drop Boost", ref ModToggles.XpBoost, "EXP, gold, drops");
-        y = DrawSliderItem(contentY, y, "Gold Multiplier", ref ModToggles.GoldMultiplier, 1f, 9999f, "0x");
-        y = DrawSliderItem(contentY, y, "XP Multiplier", ref ModToggles.XpMultiplier, 1f, 9999f, "0x");
-        y = DrawToggleItem(contentY, y, "Unlock All", ref ModToggles.UnlockAll, "Unlock DLC heroes + pets");
+        rightY = DrawSection(contentY, rightY, rightX, colW, "AUTOMATION");
+        rightY = DrawToggleItem(contentY, rightY, rightX, colW, "Auto Chest", ref ModToggles.AutoChest, "Auto-claim boss chests");
+        rightY = DrawToggleItem(contentY, rightY, rightX, colW, "Auto Act Boss", ref ModToggles.AutoActBoss, "Auto-enter portal");
+
+        rightY = DrawSection(contentY, rightY, rightX, colW, "SYSTEM");
+        rightY = DrawToggleItem(contentY, rightY, rightX, colW, "Anti-Cheat Bypass", ref ModToggles.AntiCheatBypass, "Disable AC");
+        rightY = DrawToggleItem(contentY, rightY, rightX, colW, "XP / Drop Boost", ref ModToggles.XpBoost, "EXP, gold, drops");
+        rightY = DrawSliderItem(contentY, rightY, rightX, colW, "Gold Multiplier", ref ModToggles.GoldMultiplier, 1f, 9999f, "0x");
+        rightY = DrawSliderItem(contentY, rightY, rightX, colW, "XP Multiplier", ref ModToggles.XpMultiplier, 1f, 9999f, "0x");
+        rightY = DrawToggleItem(contentY, rightY, rightX, colW, "Unlock DLC + Pets", ref ModToggles.UnlockAll, "DLC check + pet access");
+
+        float y = Mathf.Max(leftY, rightY);
+        float contentBottom = contentY + y + 4;
 
         if (statusTimer > 0 && !string.IsNullOrEmpty(statusText))
         {
-            float sy = menuRect.y + 36 + y;
+            float sy = contentBottom;
             GUI.DrawTexture(new Rect(menuRect.x + 8, sy, menuRect.width - 16, 1), MakeTex(1, 1, ColAccent));
             GUIStyle statusStyle = new() { fontSize = 11, normal = { textColor = ColAccent },
                 alignment = TextAnchor.MiddleCenter };
@@ -488,7 +501,7 @@ public sealed class J3L1XDKeeper : MonoBehaviour
 
         GUIStyle footStyle = new() { fontSize = 10, normal = { textColor = ColTextDim },
             alignment = TextAnchor.MiddleCenter };
-        float fy = menuRect.y + 36 + y + (statusTimer > 0 ? 26 : 2);
+        float fy = contentBottom + (statusTimer > 0 ? 26 : 2);
         GUI.Label(new Rect(menuRect.x, fy, menuRect.width, 16), "F5 = hide | drag = move", footStyle);
 
         if (Event.current.type == EventType.MouseDown && titleRect.Contains(Event.current.mousePosition))
@@ -512,9 +525,9 @@ public sealed class J3L1XDKeeper : MonoBehaviour
 
     private void InitStyles() { stylesInit = true; }
 
-    private float DrawToggleItem(float baseY, float y, string label, ref bool val, string desc)
+    private float DrawToggleItem(float baseY, float y, float x, float width, string label, ref bool val, string desc)
     {
-        Rect r = new(menuRect.x + 8, baseY + y, menuRect.width - 16, 34);
+        Rect r = new(x, baseY + y, width, 34);
         if (Event.current.type == EventType.MouseDown && r.Contains(Event.current.mousePosition))
         {
             val = !val;
@@ -550,9 +563,9 @@ public sealed class J3L1XDKeeper : MonoBehaviour
         return y + ItemH;
     }
 
-    private float DrawSection(float baseY, float y, string label)
+    private float DrawSection(float baseY, float y, float x, float width, string label)
     {
-        Rect r = new(menuRect.x + 8, baseY + y + 3, menuRect.width - 16, 20);
+        Rect r = new(x, baseY + y + 3, width, 20);
         DrawFrame(r, ColFrameOuter, ColFrameMid, new Color(0.085f, 0.075f, 0.06f, 1f));
 
         GUIStyle style = new() { fontSize = 10, fontStyle = FontStyle.Bold,
@@ -561,9 +574,9 @@ public sealed class J3L1XDKeeper : MonoBehaviour
         return y + SectionH;
     }
 
-    private float DrawSliderItem(float baseY, float y, string label, ref float val, float min, float max, string format)
+    private float DrawSliderItem(float baseY, float y, float x, float width, string label, ref float val, float min, float max, string format)
     {
-        Rect r = new(menuRect.x + 8, baseY + y, menuRect.width - 16, SliderH);
+        Rect r = new(x, baseY + y, width, SliderH);
         Rect track = new(r.x + 13, r.y + 28, r.width - 26, 6);
 
         DrawFrame(r, ColFrameOuter, ColSlotBorder, ColSlotDark);
