@@ -13,8 +13,6 @@ using TaskbarHero;
 using TaskbarHero.Data;
 using TaskbarHero.StatusSystem;
 using TaskbarHero.UI;
-using TaskbarHero.Manager;
-using TaskbarHero.EasySaveData;
 
 namespace J3L1XD;
 
@@ -70,19 +68,9 @@ sealed class MK
     }
 }
 
-// ─── Unlock All (DLC + Pets) ──────────────────────────
+// ─── DLC Unlock Bypass ────────────────────────────────
 [HarmonyPatch(typeof(DLCManager), "hbo")]
 sealed class UA { static bool Prefix(ref bool __result) { if (!ModToggles.UnlockAll) return true; __result = true; return false; } }
-
-[HarmonyPatch(typeof(PetManager), "kqt")]
-sealed class UP { static bool Prefix(ref bool __result) { if (!ModToggles.UnlockAll) return true; __result = true; return false; } }
-
-[HarmonyPatch(typeof(PetManager), "kqx")]
-sealed class UQ { static bool Prefix(ref bool __result) { if (!ModToggles.UnlockAll) return true; __result = true; return false; } }
-
-// Prevent crash when clicking unlocked pet with no save data
-[HarmonyPatch(typeof(PetManager), "krd")]
-sealed class UR { static void Postfix(int a, ref PetSaveData __result) { if (!ModToggles.UnlockAll || __result != null) return; __result = new PetSaveData(a, true, true); } }
 
 // ─── XP / Drop Rates ──────────────────────────────────
 [HarmonyPatch(typeof(AccountStatus), "klm")]
@@ -225,7 +213,7 @@ public sealed class J3L1XDKeeper : MonoBehaviour
 
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.F5)) SetMenuVisible(!ModToggles.ShowMenu);
+        if (Input.GetKeyDown(KeyCode.RightShift)) SetMenuVisible(!ModToggles.ShowMenu);
 
         if (ModToggles.ShowMenu) ApplyMenuCursor();
         else if (cursorCaptured || windowInputCaptured) RestoreMenuInput();
@@ -485,7 +473,7 @@ public sealed class J3L1XDKeeper : MonoBehaviour
         rightY = DrawToggleItem(contentY, rightY, rightX, colW, "XP / Drop Boost", ref ModToggles.XpBoost, "EXP, gold, drops");
         rightY = DrawSliderItem(contentY, rightY, rightX, colW, "Gold Multiplier", ref ModToggles.GoldMultiplier, 1f, 9999f, "0x");
         rightY = DrawSliderItem(contentY, rightY, rightX, colW, "XP Multiplier", ref ModToggles.XpMultiplier, 1f, 9999f, "0x");
-        rightY = DrawToggleItem(contentY, rightY, rightX, colW, "Unlock DLC + Pets", ref ModToggles.UnlockAll, "DLC check + pet access");
+        rightY = DrawToggleItem(contentY, rightY, rightX, colW, "DLC Unlock", ref ModToggles.UnlockAll, "Bypass DLC ownership check");
 
         float y = Mathf.Max(leftY, rightY);
         float contentBottom = contentY + y + 4;
@@ -502,7 +490,7 @@ public sealed class J3L1XDKeeper : MonoBehaviour
         GUIStyle footStyle = new() { fontSize = 10, normal = { textColor = ColTextDim },
             alignment = TextAnchor.MiddleCenter };
         float fy = contentBottom + (statusTimer > 0 ? 26 : 2);
-        GUI.Label(new Rect(menuRect.x, fy, menuRect.width, 16), "F5 = hide | drag = move", footStyle);
+        GUI.Label(new Rect(menuRect.x, fy, menuRect.width, 16), "Right Shift = hide | drag = move", footStyle);
 
         if (Event.current.type == EventType.MouseDown && titleRect.Contains(Event.current.mousePosition))
         {
