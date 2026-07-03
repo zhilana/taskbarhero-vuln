@@ -19,7 +19,7 @@
 #include <ctype.h>
 
 // ─── offsets from dump.cs ─────────────────────────────
-#define EDK_RVA          0xBFE930ULL   // Hero.edk method
+#define EDK_RVA          0x82ED60ULL   // Hero.edk method (updated)
 #define B_IS_HERO_OFFSET 0x100         // Unit.b_isHero field
 
 // ─── helpers ──────────────────────────────────────────

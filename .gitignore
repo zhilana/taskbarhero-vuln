@@ -22,3 +22,5 @@ obj/
 # ImGui generated
 imgui.ini
 imgui*.ini
+dumpinggame/
+codex.py
