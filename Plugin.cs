@@ -8,7 +8,9 @@ using TaskbarHero;
 using TaskbarHero.Data;
 using TaskbarHero.StatusSystem;
 using TaskbarHero.UI;
+using TaskbarHero.EasySaveData;
 using UnityEngine;
+using CodeStage.AntiCheat.ObscuredTypes;
 
 namespace J3L1XD;
 
@@ -18,8 +20,7 @@ static class CheatValues
     public const float MoveSpeed = 100f;
     public const float MoveStepMultiplier = 8f;
     public const float ExpMultiplier = 10_000_000_000_000f;
-    public const long GoldInjectionAmount = long.MaxValue;
-
+    public const long MaxGold = 9_999_999_999_999_999; // Large but safe, avoids overflow on save/load
     public static float MulExp(float value)
     {
         if (value <= 0f)
@@ -104,30 +105,14 @@ sealed class MoveStepPatch
     }
 }
 
-static class OneShotCoins
+[HarmonyPatch(typeof(vb.tq), "isc", new Type[] { typeof(CurrencySaveData) })]
+sealed class GoldLoadPatch
 {
-    static bool Done;
-
-    public static void Try(ref long amount, EGoldCurrencySource source)
+    static void Prefix(CurrencySaveData a)
     {
-        if (Done || amount <= 0 || source != EGoldCurrencySource.MonsterKill)
-            return;
-
-        amount = Math.Max(amount, CheatValues.GoldInjectionAmount);
-        Done = true;
+        if (a != null)
+            a.Quantity = CheatValues.MaxGold;
     }
-}
-
-[HarmonyPatch(typeof(vb.tq), "isd")]
-sealed class OneShotCoinsBasePatch
-{
-    static void Prefix(ref long a, EGoldCurrencySource b) => OneShotCoins.Try(ref a, b);
-}
-
-[HarmonyPatch(typeof(zc), "isd")]
-sealed class OneShotCoinsGoldPatch
-{
-    static void Prefix(ref long a, EGoldCurrencySource b) => OneShotCoins.Try(ref a, b);
 }
 
 [HarmonyPatch(typeof(AccountStatus), "knx")]
@@ -217,7 +202,7 @@ public sealed class J3L1XDPlugin : BasePlugin
         try
         {
             new Harmony("com.j3l1xd.taskbarhero").PatchAll();
-            log.LogInfo("J3L1XD 1.0.23 loaded — God Mode + One Hit Kill + Attack Speed + Move Speed + Stable Coins loaded.");
+            log.LogInfo("J3L1XD 1.0.23 loaded — God Mode + One Hit Kill + Attack Speed + Move Speed + Max Coins loaded.");
         }
         catch (Exception e)
         {
