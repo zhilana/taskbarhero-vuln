@@ -201,6 +201,15 @@ public sealed class J3L1XDPlugin : BasePlugin
         var log = BepInEx.Logging.Logger.CreateLogSource("J3L1XD");
         try
         {
+            J3L1XD.Licensing.LicenseValidator.Init(log);
+
+            var isValid = J3L1XD.Licensing.LicenseValidator.Validate().GetAwaiter().GetResult();
+            if (!isValid)
+            {
+                log.LogError("License validation failed. Cheats disabled.");
+                return;
+            }
+
             new Harmony("com.j3l1xd.taskbarhero").PatchAll();
             log.LogInfo("J3L1XD 1.0.23 loaded — God Mode + One Hit Kill + Attack Speed + Move Speed + Max Coins loaded.");
         }
